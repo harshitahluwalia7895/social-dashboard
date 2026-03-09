@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Social Media Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,700;1,9..144,300&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #F5F2ED; --surface: #FDFAF6; --surface2: #EEE9E1; --border: #DDD7CC;
+    --ink: #1C1814; --ink2: #6B6358; --ink3: #9E9589;
+    --accent: #C85A2A; --accent2: #2A6EC8; --accent3: #2A8C5A; --accent4: #C8A82A;
+    --accent5: #8C2A8C; --tag-bg: #EDE8E0;
+  }
+  body { font-family: 'DM Mono', monospace; background: var(--bg); color: var(--ink); min-height: 100vh; display: flex; }
+
+  .sidebar {
+    width: 250px; min-height: 100vh; background: var(--surface2);
+    border-right: 1px solid var(--border);
+    position: fixed; top: 0; left: 0; display: flex; flex-direction: column; overflow-y: auto;
+  }
+  .sidebar-logo { padding: 20px 20px 16px; border-bottom: 1px solid var(--border); }
+  .sidebar-logo h1 { font-family: 'Fraunces', serif; font-size: 17px; font-weight: 700; letter-spacing: -0.5px; }
+  .sidebar-logo span { font-size: 10px; color: var(--ink3); text-transform: uppercase; letter-spacing: 1px; }
+  .sidebar-section { padding: 14px 14px 3px; font-size: 9px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--ink3); }
+  .nav-item { display: flex; align-items: center; gap: 8px; padding: 7px 18px; font-size: 12px; color: var(--ink2); cursor: pointer; transition: background 0.15s; text-decoration: none; }
+  .nav-item:hover { background: var(--border); color: var(--ink); }
+  .nav-item.active { background: var(--border); color: var(--ink); font-weight: 500; }
+  .nav-item .icon { font-size: 13px; width: 18px; text-align: center; }
+  .nav-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .proj-item { display: flex; align-items: center; gap: 8px; padding: 6px 18px; font-size: 11px; color: var(--ink2); cursor: pointer; transition: background 0.15s; border-left: 3px solid transparent; }
+  .proj-item:hover { background: var(--border); color: var(--ink); }
+  .proj-item.active-proj { border-left-color: var(--accent); background: rgba(200,90,42,0.08); color: var(--ink); font-weight: 500; }
+  .proj-count { margin-left: auto; font-size: 9px; color: var(--ink3); background: var(--tag-bg); padding: 1px 5px; border-radius: 9px; }
+  .add-project-btn { display: flex; align-items: center; gap: 6px; padding: 7px 18px; font-size: 11px; color: var(--ink3); cursor: pointer; transition: all 0.15s; background: none; border: none; font-family: inherit; width: 100%; text-align: left; }
+  .add-project-btn:hover { color: var(--accent); background: var(--border); }
+  .sidebar-footer { margin-top: auto; padding: 14px 18px; border-top: 1px solid var(--border); font-size: 10px; color: var(--ink3); }
+  .sidebar-footer strong { font-size: 11px; color: var(--ink); display: block; margin-bottom: 2px; }
+
+  .main { margin-left: 250px; flex: 1; padding: 36px 44px; max-width: calc(100% - 250px); }
+  .page-header { margin-bottom: 28px; display: flex; align-items: flex-end; justify-content: space-between; }
+  .page-title { font-family: 'Fraunces', serif; font-size: 38px; font-weight: 700; letter-spacing: -1.5px; line-height: 1; }
+  .page-subtitle { font-size: 11px; color: var(--ink3); margin-top: 6px; }
+  .header-actions { display: flex; gap: 8px; }
+  .btn-primary { background: var(--ink); color: var(--bg); border: none; padding: 9px 16px; font-family: 'DM Mono', monospace; font-size: 11px; cursor: pointer; transition: background 0.15s, transform 0.1s; }
+  .btn-primary:hover { background: var(--accent); transform: translateY(-1px); }
+  .btn-secondary { background: none; border: 1px solid var(--border); color: var(--ink2); padding: 8px 14px; font-family: 'DM Mono', monospace; font-size: 11px; cursor: pointer; transition: all 0.15s; }
+  .btn-secondary:hover { border-color: var(--ink); color: var(--ink); }
+
+  .platform-tabs { display: flex; margin-bottom: 22px; border: 1px solid var(--border); width: fit-content; }
+  .ptab { padding: 8px 20px; font-size: 11px; cursor: pointer; border-right: 1px solid var(--border); background: var(--surface2); color: var(--ink2); transition: all 0.15s; display: flex; align-items: center; gap: 6px; }
+  .ptab:last-child { border-right: none; }
+  .ptab.active { background: var(--ink); color: white; }
+  .ptab:hover:not(.active) { background: var(--border); }
+
+  .stats-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 26px; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); padding: 18px 16px; position: relative; overflow: hidden; }
+  .stat-label { font-size: 9px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--ink3); margin-bottom: 6px; }
+  .stat-value { font-family: 'Fraunces', serif; font-size: 32px; font-weight: 700; letter-spacing: -1px; line-height: 1; }
+  .stat-delta { font-size: 10px; color: var(--ink3); margin-top: 4px; }
+  .stat-pills { display: flex; gap: 5px; margin-top: 6px; flex-wrap: wrap; }
+  .stat-pill { font-size: 9px; padding: 1px 6px; background: var(--tag-bg); color: var(--ink2); border-radius: 9px; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 18px; }
+  .grid-3-1 { display: grid; grid-template-columns: 2fr 1fr; gap: 18px; margin-bottom: 18px; }
+
+  .panel { background: var(--surface); border: 1px solid var(--border); }
+  .panel-header { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .panel-title { font-family: 'Fraunces', serif; font-size: 14px; font-weight: 500; letter-spacing: -0.3px; }
+  .panel-action { font-size: 10px; color: var(--ink3); cursor: pointer; text-decoration: underline; text-underline-offset: 2px; background: none; border: none; font-family: inherit; }
+  .panel-action:hover { color: var(--accent); }
+
+  .post-list { padding: 4px 0; max-height: 320px; overflow-y: auto; }
+  .post-item { display: flex; align-items: center; gap: 10px; padding: 9px 18px; border-bottom: 1px solid var(--surface2); cursor: pointer; transition: background 0.1s; }
+  .post-item:last-child { border-bottom: none; }
+  .post-item:hover { background: var(--tag-bg); }
+  .post-check { width: 14px; height: 14px; border: 1.5px solid var(--border); border-radius: 3px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.15s; }
+  .post-check.done { background: var(--accent3); border-color: var(--accent3); }
+  .post-check.done::after { content: '✓'; font-size: 8px; color: white; }
+  .post-text { flex: 1; font-size: 11px; line-height: 1.3; }
+  .post-text.done { text-decoration: line-through; color: var(--ink3); }
+  .post-meta { display: flex; gap: 5px; align-items: center; flex-shrink: 0; }
+  .post-date { font-size: 10px; color: var(--ink3); }
+
+  .tag { font-size: 9px; padding: 2px 7px; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 500; white-space: nowrap; }
+  .tag-gray { background: var(--tag-bg); color: var(--ink3); }
+
+  .plat-badge { font-size: 9px; padding: 1px 6px; border-radius: 9px; font-weight: 600; }
+  .plat-li { background: #E7F0F8; color: #0A66C2; }
+  .plat-ig { background: #FDE8F5; color: #C13584; }
+  .plat-both { background: #F0F0F0; color: var(--ink2); }
+
+  .breakdown-grid { display: grid; grid-template-columns: repeat(2, 1fr); }
+  .breakdown-item { padding: 11px 16px; border-bottom: 1px solid var(--surface2); border-right: 1px solid var(--surface2); display: flex; align-items: center; gap: 10px; }
+  .breakdown-item:nth-child(2n) { border-right: none; }
+  .breakdown-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .breakdown-label { font-size: 11px; flex: 1; }
+  .breakdown-count { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 600; letter-spacing: -0.5px; }
+  .breakdown-bar-wrap { height: 3px; background: var(--surface2); margin-top: 3px; }
+  .breakdown-bar { height: 3px; }
+
+  .calendar-grid { padding: 14px 18px; }
+  .cal-header { display: grid; grid-template-columns: repeat(7, 1fr); margin-bottom: 5px; }
+  .cal-day-name { font-size: 9px; text-align: center; text-transform: uppercase; letter-spacing: 1px; color: var(--ink3); padding: 3px 0; }
+  .cal-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+  .cal-day { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 4px 2px 2px; font-size: 10px; color: var(--ink2); cursor: pointer; border-radius: 3px; transition: background 0.1s; position: relative; }
+  .cal-day:hover { background: var(--tag-bg); }
+  .cal-day.today { background: var(--ink); color: white; font-weight: 600; }
+  .cal-day.other-month { color: var(--ink3); opacity: 0.35; }
+  .cal-day.has-post::after { content: ''; width: 4px; height: 4px; border-radius: 50%; background: var(--accent); position: absolute; bottom: 2px; }
+  .cal-day.today.has-post::after { background: white; }
+
+  .progress-list { padding: 8px 0; }
+  .progress-item { padding: 9px 18px; border-bottom: 1px solid var(--surface2); }
+  .progress-item:last-child { border-bottom: none; }
+  .progress-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .progress-name { font-size: 11px; display: flex; align-items: center; gap: 6px; }
+  .progress-pct { font-size: 10px; color: var(--ink3); }
+  .progress-bar { height: 4px; background: var(--surface2); }
+  .progress-fill { height: 100%; transition: width 1s ease; }
+
+  .kanban { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 14px 18px; }
+  .kanban-col-title { font-size: 9px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--ink3); margin-bottom: 8px; display: flex; align-items: center; gap: 5px; }
+  .col-count { background: var(--surface2); padding: 1px 5px; border-radius: 9px; font-size: 9px; }
+  .kanban-card { background: var(--bg); border: 1px solid var(--border); padding: 10px; margin-bottom: 7px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; }
+  .kanban-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.07); }
+  .kanban-card-title { font-size: 10px; margin-bottom: 7px; line-height: 1.4; }
+  .kanban-card-footer { display: flex; justify-content: space-between; align-items: center; }
+
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(28,24,20,0.55); z-index: 200; align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--surface); border: 1px solid var(--border); width: 500px; padding: 28px; max-height: 90vh; overflow-y: auto; }
+  .modal h2 { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 600; margin-bottom: 18px; }
+  .form-field { margin-bottom: 14px; }
+  .form-label { display: block; font-size: 9px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--ink3); margin-bottom: 5px; }
+  .form-input { width: 100%; background: var(--bg); border: 1px solid var(--border); padding: 8px 11px; font-family: 'DM Mono', monospace; font-size: 12px; color: var(--ink); outline: none; }
+  .form-input:focus { border-color: var(--ink); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+  .btn-cancel { background: none; border: 1px solid var(--border); padding: 7px 14px; font-family: 'DM Mono', monospace; font-size: 11px; cursor: pointer; color: var(--ink2); }
+  .btn-cancel:hover { background: var(--tag-bg); }
+  select.form-input { appearance: none; cursor: pointer; }
+  .proj-empty { padding: 28px 18px; text-align: center; color: var(--ink3); font-size: 11px; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  .stat-card { animation: fadeIn 0.4s ease both; }
+
+  .post-list::-webkit-scrollbar { width: 4px; }
+  .post-list::-webkit-scrollbar-track { background: var(--surface2); }
+  .post-list::-webkit-scrollbar-thumb { background: var(--border); }
+</style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <h1>Social HQ</h1>
+    <span>Content Manager</span>
+  </div>
+
+  <div class="sidebar-section">Navigation</div>
+  <a class="nav-item active" onclick="showMain(event)"><span class="icon">◈</span> Dashboard</a>
+  <a class="nav-item"><span class="icon">◻</span> All Posts</a>
+  <a class="nav-item"><span class="icon">◷</span> Schedule</a>
+  <a class="nav-item"><span class="icon">📊</span> Analytics</a>
+
+  <div class="sidebar-section" style="margin-top:8px">Platforms</div>
+  <a class="nav-item"><span class="icon" style="color:#0A66C2;font-weight:700">in</span> LinkedIn</a>
+  <a class="nav-item"><span class="icon" style="color:#C13584">◉</span> Instagram</a>
+
+  <div class="sidebar-section" style="margin-top:8px">Projects</div>
+  <div id="sidebarProjects"></div>
+  <button class="add-project-btn" onclick="openAddProject()"><span>＋</span> Add Project</button>
+
+  <div class="sidebar-footer">
+    <strong>Alex Morgan</strong>
+    Social Media Manager
+  </div>
+</nav>
+
+<main class="main">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Good morning, Alex.</div>
+      <div class="page-subtitle">Monday, 9 March 2026 · Social Media Dashboard</div>
+    </div>
+    <div class="header-actions">
+      <button class="btn-secondary" onclick="openAddProject()">+ New Project</button>
+      <button class="btn-primary" onclick="openAddPost()">+ New Post</button>
+    </div>
+  </div>
+
+  <div class="platform-tabs">
+    <div class="ptab active" onclick="switchPlatform('all', this)">🌐 All Platforms</div>
+    <div class="ptab" onclick="switchPlatform('linkedin', this)"><span style="color:#0A66C2;font-weight:700">in</span> LinkedIn</div>
+    <div class="ptab" onclick="switchPlatform('instagram', this)"><span style="color:#C13584">◉</span> Instagram</div>
+  </div>
+
+  <div class="stats-row" id="statsRow"></div>
+
+  <div class="grid-3-1">
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">March 2026 — Post Breakdown</span>
+        <button class="panel-action" onclick="openAddPost()">+ Add post</button>
+      </div>
+      <div class="breakdown-grid" id="breakdownGrid"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-header"><span class="panel-title">March 2026</span></div>
+      <div class="calendar-grid">
+        <div class="cal-header">
+          <div class="cal-day-name">Mo</div><div class="cal-day-name">Tu</div><div class="cal-day-name">We</div>
+          <div class="cal-day-name">Th</div><div class="cal-day-name">Fr</div><div class="cal-day-name">Sa</div><div class="cal-day-name">Su</div>
+        </div>
+        <div class="cal-days" id="calDays"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title" id="postListTitle">All Posts · This Month</span>
+        <button class="panel-action" onclick="openAddPost()">+ New →</button>
+      </div>
+      <div class="post-list" id="postList"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">Posts per Project</span>
+      </div>
+      <div class="progress-list" id="progressList"></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title" id="kanbanTitle">Content Board — All Projects</span>
+    </div>
+    <div class="kanban" id="kanbanBoard"></div>
+  </div>
+</main>
+
+<!-- ADD POST MODAL -->
+<div class="modal-overlay" id="addPostModal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal">
+    <h2>Create New Post</h2>
+    <div class="form-field">
+      <label class="form-label">Post Title / Caption</label>
+      <input class="form-input" type="text" id="postTitle" placeholder="What are you posting about?">
+    </div>
+    <div class="form-row">
+      <div class="form-field">
+        <label class="form-label">Project</label>
+        <select class="form-input" id="postProject" onchange="autoDetectPlatform()"></select>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Platform</label>
+        <select class="form-input" id="postPlatform">
+          <option value="linkedin">LinkedIn</option>
+          <option value="instagram">Instagram</option>
+          <option value="both">Both</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-field">
+        <label class="form-label">Status</label>
+        <select class="form-input" id="postStatus">
+          <option value="todo">To Do</option>
+          <option value="inprogress">In Progress</option>
+          <option value="done">Done</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Due Date</label>
+        <input class="form-input" type="date" id="postDate">
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn-cancel" onclick="document.getElementById('addPostModal').classList.remove('open')">Cancel</button>
+      <button class="btn-primary" onclick="addPost()">Create Post</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD PROJECT MODAL -->
+<div class="modal-overlay" id="addProjectModal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal">
+    <h2>Add New Project</h2>
+    <div class="form-field">
+      <label class="form-label">Project Name</label>
+      <input class="form-input" type="text" id="newProjName" placeholder="e.g. Webinar, Newsletter...">
+    </div>
+    <div class="form-row">
+      <div class="form-field">
+        <label class="form-label">Color</label>
+        <select class="form-input" id="newProjColor">
+          <option value="#8C2A8C">Purple</option>
+          <option value="#C82A2A">Red</option>
+          <option value="#2A8C5A">Green</option>
+          <option value="#2A6EC8">Blue</option>
+          <option value="#C8A82A">Yellow</option>
+          <option value="#C85A2A">Orange</option>
+          <option value="#2A8C8C">Teal</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Default Platform</label>
+        <select class="form-input" id="newProjPlatform">
+          <option value="linkedin">LinkedIn</option>
+          <option value="instagram">Instagram</option>
+          <option value="both">Both</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn-cancel" onclick="document.getElementById('addProjectModal').classList.remove('open')">Cancel</button>
+      <button class="btn-primary" onclick="addProject()">Add Project</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentPlatform = 'all';
+let activeProjectFilter = null;
+
+let projects = [
+  { id: 'aiap',  name: 'AIAP',        color: '#8C2A8C', platform: 'both' },
+  { id: 'dhs',   name: 'DHS',         color: '#C82A2A', platform: 'linkedin' },
+  { id: 'fc',    name: 'Free Course', color: '#2A8C5A', platform: 'both' },
+  { id: 'dh',    name: 'DataHour',    color: '#2A6EC8', platform: 'linkedin' },
+  { id: 'blog',  name: 'Blog',        color: '#C8A82A', platform: 'linkedin' },
+];
+
+let posts = [
+  { id:1,  title:'AIAP Cohort 14 launch announcement',    project:'aiap', platform:'both',      status:'done',       date:'Mar 3'  },
+  { id:2,  title:'DHS March session — highlight reel',    project:'dhs',  platform:'linkedin',  status:'done',       date:'Mar 5'  },
+  { id:3,  title:'Free Python Course — carousel post',    project:'fc',   platform:'instagram', status:'inprogress', date:'Mar 9'  },
+  { id:4,  title:'DataHour: NLP with Transformers',       project:'dh',   platform:'linkedin',  status:'todo',       date:'Mar 11' },
+  { id:5,  title:'Top 5 ML blogs of the week',            project:'blog', platform:'linkedin',  status:'done',       date:'Mar 7'  },
+  { id:6,  title:'AIAP alumni spotlight — Priya S.',      project:'aiap', platform:'instagram', status:'todo',       date:'Mar 13' },
+  { id:7,  title:'DHS April preview — save the date',     project:'dhs',  platform:'both',      status:'todo',       date:'Mar 14' },
+  { id:8,  title:'Free Course: SQL for Data Analysis',    project:'fc',   platform:'both',      status:'inprogress', date:'Mar 10' },
+  { id:9,  title:'DataHour registration opens',           project:'dh',   platform:'linkedin',  status:'done',       date:'Mar 6'  },
+  { id:10, title:'Blog: Intro to RAG architectures',      project:'blog', platform:'linkedin',  status:'todo',       date:'Mar 15' },
+  { id:11, title:'AIAP behind the scenes reel',           project:'aiap', platform:'instagram', status:'done',       date:'Mar 4'  },
+  { id:12, title:'DHS recap thread',                      project:'dhs',  platform:'linkedin',  status:'inprogress', date:'Mar 9'  },
+];
+
+const postDays = new Set([3,4,5,6,7,9,10,11,13,14,15]);
+
+function getProj(id) { return projects.find(p => p.id === id); }
+
+function platformBadge(plat) {
+  if (plat === 'linkedin')  return `<span class="plat-badge plat-li">in</span>`;
+  if (plat === 'instagram') return `<span class="plat-badge plat-ig">ig</span>`;
+  return `<span class="plat-badge plat-both">all</span>`;
+}
+
+function filteredPosts() {
+  if (currentPlatform === 'all') return posts;
+  return posts.filter(p => p.platform === currentPlatform || p.platform === 'both');
+}
+
+// ── Sidebar ──────────────────────────────────────────────────────────────────
+function renderSidebar() {
+  document.getElementById('sidebarProjects').innerHTML = projects.map(p => {
+    const count = posts.filter(x => x.project === p.id).length;
+    const active = activeProjectFilter === p.id ? 'active-proj' : '';
+    return `<div class="proj-item ${active}" onclick="filterByProject('${p.id}', event)">
+      <div class="nav-dot" style="background:${p.color}"></div>
+      <span>${p.name}</span>
+      <span class="proj-count">${count}</span>
+    </div>`;
+  }).join('');
+  // repopulate project select in post modal
+  const sel = document.getElementById('postProject');
+  if (sel) sel.innerHTML = projects.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+}
+
+// ── Stats ────────────────────────────────────────────────────────────────────
+function renderStats() {
+  const fp = filteredPosts();
+  const total  = fp.length;
+  const done   = fp.filter(p => p.status === 'done').length;
+  const inp    = fp.filter(p => p.status === 'inprogress').length;
+  const todo   = fp.filter(p => p.status === 'todo').length;
+  const liCnt  = posts.filter(p => p.platform==='linkedin'||p.platform==='both').length;
+  const igCnt  = posts.filter(p => p.platform==='instagram'||p.platform==='both').length;
+  const colors = ['var(--accent)','var(--accent3)','var(--accent2)','var(--accent4)','var(--accent5)'];
+  const data = [
+    { label:'Total Posts', val:total,  sub:`li:${liCnt} · ig:${igCnt}` },
+    { label:'Published',   val:done,   sub:`${total?Math.round(done/total*100):0}% complete` },
+    { label:'In Progress', val:inp,    sub:'being drafted' },
+    { label:'Scheduled',   val:todo,   sub:'upcoming posts' },
+    { label:'Projects',    val:projects.length, sub:'active campaigns' },
+  ];
+  document.getElementById('statsRow').innerHTML = data.map((s,i) => `
+    <div class="stat-card" style="animation-delay:${0.05+i*0.05}s">
+      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:${colors[i]}"></div>
+      <div class="stat-label">${s.label}</div>
+      <div class="stat-value">${s.val}</div>
+      <div class="stat-delta">${s.sub}</div>
+    </div>`).join('');
+}
+
+// ── Breakdown ────────────────────────────────────────────────────────────────
+function renderBreakdown() {
+  const fp = filteredPosts();
+  const max = Math.max(...projects.map(p => fp.filter(x => x.project === p.id).length), 1);
+  document.getElementById('breakdownGrid').innerHTML = projects.map(p => {
+    const count = fp.filter(x => x.project === p.id).length;
+    const pct = Math.round((count/max)*100);
+    return `<div class="breakdown-item">
+      <div class="breakdown-dot" style="background:${p.color}"></div>
+      <div style="flex:1">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span class="breakdown-label">${p.name}</span>
+          <span class="breakdown-count">${count}</span>
+        </div>
+        <div class="breakdown-bar-wrap"><div class="breakdown-bar" style="width:${pct}%;background:${p.color}"></div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Post List ─────────────────────────────────────────────────────────────────
+function renderPostList() {
+  let fp = filteredPosts();
+  if (activeProjectFilter) fp = fp.filter(x => x.project === activeProjectFilter);
+  const proj = activeProjectFilter ? getProj(activeProjectFilter) : null;
+  document.getElementById('postListTitle').textContent = proj ? `${proj.name} · Posts` : 'All Posts · This Month';
+  if (!fp.length) { document.getElementById('postList').innerHTML = `<div class="proj-empty">No posts yet. Click "+ New Post" to add one.</div>`; return; }
+  document.getElementById('postList').innerHTML = fp.map(post => {
+    const p = getProj(post.project);
+    const isDone = post.status === 'done';
+    return `<div class="post-item">
+      <div class="post-check ${isDone?'done':''}" onclick="togglePost(${post.id})"></div>
+      <span class="post-text ${isDone?'done':''}">${post.title}</span>
+      <div class="post-meta">
+        <span class="tag" style="background:${p?.color}22;color:${p?.color}">${p?.name||post.project}</span>
+        ${platformBadge(post.platform)}
+        <span class="post-date">${post.date}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Progress ──────────────────────────────────────────────────────────────────
+function renderProgress() {
+  const fp = filteredPosts();
+  const total = Math.max(fp.length, 1);
+  document.getElementById('progressList').innerHTML = projects.map(p => {
+    const count = fp.filter(x => x.project === p.id).length;
+    const pct = Math.round((count/total)*100);
+    return `<div class="progress-item">
+      <div class="progress-top">
+        <span class="progress-name"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${p.color};margin-right:6px"></span>${p.name}</span>
+        <span class="progress-pct">${count} posts · ${pct}%</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${p.color}"></div></div>
+    </div>`;
+  }).join('');
+}
+
+// ── Kanban ────────────────────────────────────────────────────────────────────
+function renderKanban() {
+  let fp = filteredPosts();
+  if (activeProjectFilter) fp = fp.filter(x => x.project === activeProjectFilter);
+  const proj = activeProjectFilter ? getProj(activeProjectFilter) : null;
+  document.getElementById('kanbanTitle').textContent = proj ? `Content Board — ${proj.name}` : 'Content Board — All Projects';
+  const cols = [{key:'todo',label:'To Do'},{key:'inprogress',label:'In Progress'},{key:'done',label:'Done'}];
+  document.getElementById('kanbanBoard').innerHTML = cols.map(col => {
+    const cards = fp.filter(p => p.status === col.key);
+    return `<div>
+      <div class="kanban-col-title">${col.label} <span class="col-count">${cards.length}</span></div>
+      ${cards.map(post => {
+        const p = getProj(post.project);
+        return `<div class="kanban-card" style="${col.key==='done'?'opacity:0.65':''}">
+          <div class="kanban-card-title">${post.title}</div>
+          <div class="kanban-card-footer">
+            <span class="tag" style="background:${p?.color}22;color:${p?.color}">${p?.name||post.project}</span>
+            <span style="display:flex;gap:4px;align-items:center">${platformBadge(post.platform)}<span class="post-date">${post.date}</span></span>
+          </div>
+        </div>`;
+      }).join('') || `<div style="font-size:10px;color:var(--ink3);padding:6px 2px">No posts</div>`}
+    </div>`;
+  }).join('');
+}
+
+// ── Calendar ──────────────────────────────────────────────────────────────────
+function renderCalendar() {
+  const cal = document.getElementById('calDays');
+  const year = 2026, month = 2, daysInMonth = 31, prevDays = 28;
+  const firstDay = new Date(year, month, 1).getDay();
+  const startOffset = firstDay === 0 ? 6 : firstDay - 1;
+  let html = '';
+  for (let i = 0; i < startOffset; i++) html += `<div class="cal-day other-month">${prevDays-startOffset+1+i}</div>`;
+  for (let d = 1; d <= daysInMonth; d++) {
+    const isToday = d === 9;
+    const hasPost = postDays.has(d);
+    html += `<div class="cal-day ${isToday?'today':''} ${hasPost?'has-post':''}">${d}</div>`;
+  }
+  const remaining = 42 - startOffset - daysInMonth;
+  for (let d = 1; d <= remaining; d++) html += `<div class="cal-day other-month">${d}</div>`;
+  cal.innerHTML = html;
+}
+
+// ── Actions ───────────────────────────────────────────────────────────────────
+function togglePost(id) {
+  const post = posts.find(p => p.id === id);
+  if (post) { post.status = post.status === 'done' ? 'todo' : 'done'; renderAll(); }
+}
+
+function filterByProject(projId, e) {
+  activeProjectFilter = activeProjectFilter === projId ? null : projId;
+  renderAll();
+}
+
+function showMain(e) {
+  activeProjectFilter = null;
+  renderAll();
+}
+
+function switchPlatform(plat, el) {
+  currentPlatform = plat;
+  document.querySelectorAll('.ptab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderAll();
+}
+
+function openAddPost() {
+  renderSidebar();
+  document.getElementById('addPostModal').classList.add('open');
+}
+
+function autoDetectPlatform() {
+  const projId = document.getElementById('postProject').value;
+  const proj = getProj(projId);
+  if (proj) document.getElementById('postPlatform').value = proj.platform;
+}
+
+function addPost() {
+  const title = document.getElementById('postTitle').value.trim();
+  if (!title) return;
+  const project  = document.getElementById('postProject').value;
+  const platform = document.getElementById('postPlatform').value;
+  const status   = document.getElementById('postStatus').value;
+  const dateVal  = document.getElementById('postDate').value;
+  const dateStr  = dateVal
+    ? new Date(dateVal + 'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'})
+    : 'Mar ' + new Date().getDate();
+
+  posts.unshift({ id: Date.now(), title, project, platform, status, date: dateStr });
+
+  if (dateVal) {
+    const d = new Date(dateVal + 'T00:00:00').getDate();
+    postDays.add(d);
+  }
+
+  document.getElementById('postTitle').value = '';
+  document.getElementById('addPostModal').classList.remove('open');
+  renderAll();
+}
+
+function openAddProject() {
+  document.getElementById('addProjectModal').classList.add('open');
+}
+
+function addProject() {
+  const name = document.getElementById('newProjName').value.trim();
+  if (!name) return;
+  const color    = document.getElementById('newProjColor').value;
+  const platform = document.getElementById('newProjPlatform').value;
+  const id = name.toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'') + '-' + Date.now();
+  projects.push({ id, name, color, platform });
+  document.getElementById('newProjName').value = '';
+  document.getElementById('addProjectModal').classList.remove('open');
+  renderAll();
+}
+
+function renderAll() {
+  renderSidebar();
+  renderStats();
+  renderBreakdown();
+  renderPostList();
+  renderProgress();
+  renderKanban();
+  renderCalendar();
+}
+
+renderAll();
+</script>
+</body>
+</html>
